@@ -47,3 +47,4 @@ public class DataImportToSolr {
         bean.importItemDataToSolr();
     }
 }
+

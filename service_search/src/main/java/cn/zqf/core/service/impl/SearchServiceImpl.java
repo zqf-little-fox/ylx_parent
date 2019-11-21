@@ -50,4 +50,5 @@ public class SearchServiceImpl implements SearchService {
         resultMap.put("total",items.getTotalElements());
         return resultMap;
     }
+
 }

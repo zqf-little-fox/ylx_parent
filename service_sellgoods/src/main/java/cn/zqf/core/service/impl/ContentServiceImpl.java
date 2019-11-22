@@ -5,7 +5,7 @@ import cn.zqf.core.entity.PageResult;
 import cn.zqf.core.pojo.ad.Content;
 import cn.zqf.core.pojo.ad.ContentQuery;
 import cn.zqf.core.service.ContentService;
-import cn.zqf.core.util.Contants;
+import cn.zqf.core.util.Constants;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
@@ -39,7 +39,7 @@ public class ContentServiceImpl implements ContentService {
         //添加广告 到数据库
         contentDao.insertSelective(content);
         //根据分类id到redis中删除对应的分类广告集合
-        redisTemplate.boundHashOps(Contants.CONTENT_LIST_REDIS).delete(content.getCategoryId());
+        redisTemplate.boundHashOps(Constants.CONTENT_LIST_REDIS).delete(content.getCategoryId());
     }
 
     @Override
@@ -52,9 +52,9 @@ public class ContentServiceImpl implements ContentService {
         //根据广告id到数据库中查询原来的广告对象
         Content oldContent = contentDao.selectByPrimaryKey(content.getId());
         //根据原来广告对象中的分类id 到redis 删除对应广告集合数据
-        redisTemplate.boundHashOps(Contants.CONTENT_LIST_REDIS).delete(oldContent.getCategoryId());
+        redisTemplate.boundHashOps(Constants.CONTENT_LIST_REDIS).delete(oldContent.getCategoryId());
         //根据传入的最新广告分类对中的id删除redis中对应的广告集合数据
-        redisTemplate.boundHashOps(Contants.CONTENT_LIST_REDIS).delete(content.getCategoryId());
+        redisTemplate.boundHashOps(Constants.CONTENT_LIST_REDIS).delete(content.getCategoryId());
         //将新的广告对象更新到数据库中
         contentDao.updateByPrimaryKeySelective(content);
     }
@@ -79,7 +79,7 @@ public class ContentServiceImpl implements ContentService {
             for (Long id : ids) {
                 Content content = contentDao.selectByPrimaryKey(id);
                 //根据广告对象中的分类id 删除redis中对应的广告集合数据
-                redisTemplate.boundHashOps(Contants.CONTENT_LIST_REDIS).delete(content.getCategoryId());
+                redisTemplate.boundHashOps(Constants.CONTENT_LIST_REDIS).delete(content.getCategoryId());
                 //删除广告
                 contentDao.deleteByPrimaryKey(id);
             }
@@ -97,12 +97,12 @@ public class ContentServiceImpl implements ContentService {
     @Override
     public List<Content> findByCategoryIdFromRedis(Long categoryId) {
         //根据分类的id到redis中取数据
-        List<Content> contentList = (List<Content>) redisTemplate.boundHashOps(Contants.CONTENT_LIST_REDIS).get(categoryId);
+        List<Content> contentList = (List<Content>) redisTemplate.boundHashOps(Constants.CONTENT_LIST_REDIS).get(categoryId);
         //如果redis中没有数据 到数据库中取数据
         if (contentList == null){
             //如果数据库中获取到数据 存入redis中
             contentList = findByCategoryId(categoryId);
-            redisTemplate.boundHashOps(Contants.CONTENT_LIST_REDIS).put(categoryId,contentList);
+            redisTemplate.boundHashOps(Constants.CONTENT_LIST_REDIS).put(categoryId,contentList);
         }
         return contentList;
     }

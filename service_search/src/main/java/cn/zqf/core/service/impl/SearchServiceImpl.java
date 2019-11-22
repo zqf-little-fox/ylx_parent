@@ -6,11 +6,13 @@ import cn.zqf.core.util.Constants;
 import com.alibaba.dubbo.config.annotation.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.solr.core.SolrTemplate;
 import org.springframework.data.solr.core.query.*;
 import org.springframework.data.solr.core.query.result.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +30,7 @@ public class SearchServiceImpl implements SearchService {
     public Map<String, Object> search(Map paramMap) {
         //根据参数关键字 到solr中查询 分页 总条数 总页数
         Map<String, Object> resultMap = highLightSearch(paramMap);
+
         //根据查询的参数到solr中获取对应的分类结果 因为分类有重复 按分组的方式去重复
         List<String> categoryList = findGroupCategoryList(paramMap);
         resultMap.put("categoryList",categoryList);
@@ -69,6 +72,54 @@ public class SearchServiceImpl implements SearchService {
         query.setOffset(start);
         //每页查询多少条数据
         query.setRows(pageSize);
+
+        //按分类筛选
+        if (paramMap.get("category") != null &&!"".equals(paramMap.get("category"))){
+            Criteria filterCriteria = new Criteria("item_category").is(paramMap.get("category"));
+            SimpleFilterQuery filterQuery = new SimpleFilterQuery(filterCriteria);
+            query.addFilterQuery(filterQuery);
+        }
+        //按照品牌筛选
+        if (paramMap.get("brand") != null && !"".equals(paramMap.get("brand"))){
+            Criteria filterCriteria = new Criteria("item_brand").is(paramMap.get("brand"));
+            SimpleFilterQuery filterQuery = new SimpleFilterQuery(filterCriteria);
+            query.addFilterQuery(filterQuery);
+        }
+        //按照规格筛选
+        if (paramMap.get("spec") != null && !"".equals(paramMap.get("spec"))){
+            Map<String,String> specMap = (Map<String, String>) paramMap.get("spec");
+            for (String key : specMap.keySet()){
+                Criteria filterCriteria = new Criteria("item_spec_" + key).is(specMap.get(key));
+                SimpleFilterQuery filterQuery = new SimpleFilterQuery(filterCriteria);
+                query.addFilterQuery(filterQuery);
+            }
+        }
+        //按照价格筛选
+        if (paramMap.get("price") != null && !"".equals(paramMap.get("price"))){
+            String[] price = ((String) paramMap.get("price")).split("-");
+            if(!price[0].equals("0")){//如果区间起点不等于0
+                Criteria filterCriteria=new Criteria("item_price").greaterThanEqual(price[0]);
+                FilterQuery filterQuery=new SimpleFilterQuery(filterCriteria);
+                query.addFilterQuery(filterQuery);
+            }
+            if(!price[1].equals("*")){//如果区间终点不等于*
+                Criteria filterCriteria=new Criteria("item_price").lessThanEqual(price[1]);
+                FilterQuery filterQuery=new SimpleFilterQuery(filterCriteria);
+                query.addFilterQuery(filterQuery);
+            }
+        }
+        //按照价格排序
+        String sortValue = (String) paramMap.get("sort");//升序 降序
+        String sortField = (String) paramMap.get("sortField");//排序字段
+        if (sortValue != null && !"".equals(sortValue)){
+            if ("DESC".equals(sortValue)){
+                Sort sort = new Sort(Sort.Direction.DESC, "item_" + sortField);
+                query.addSort(sort);
+            }else if ("ASC".equals(sortValue)){
+                Sort sort = new Sort(Sort.Direction.ASC, "item_" + sortField);
+                query.addSort(sort);
+            }
+        }
 
         //创建高亮显示对象
         HighlightOptions highlightOptions = new HighlightOptions();

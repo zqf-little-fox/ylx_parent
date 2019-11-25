@@ -35,6 +35,7 @@ public class SearchServiceImpl implements SearchService {
         //根据查询的参数到solr中获取对应的分类结果 因为分类有重复 按分组的方式去重复
         List<String> categoryList = findGroupCategoryList(paramMap);
         resultMap.put("categoryList",categoryList);
+
         //判断paramMap传入的参数中是否有分类的名称
         String category = String.valueOf(paramMap.get("category"));
         if (category != null && !"".equals(category)){
@@ -46,6 +47,7 @@ public class SearchServiceImpl implements SearchService {
             Map specListAndBrandList = findSpecListAndBrandList(categoryList.get(0));
             resultMap.putAll(specListAndBrandList);
         }
+
         return resultMap;
     }
 
@@ -94,7 +96,9 @@ public class SearchServiceImpl implements SearchService {
                 for (String key : specMap.keySet()) {
                     Criteria filterCriteria = new Criteria("item_spec_" + key).is(specMap.get(key));
                     //SimpleFilterQuery filterQuery = new SimpleFilterQuery(filterCriteria);
+                    //封装查询对象
                     FilterQuery filterQuery = new SimpleFilterQuery();
+                    //将查询条件放入查询对象中
                     filterQuery.addCriteria(filterCriteria);
                     query.addFilterQuery(filterQuery);
                 }
@@ -104,12 +108,14 @@ public class SearchServiceImpl implements SearchService {
         if (paramMap.get("price") != null && !"".equals(paramMap.get("price"))){
             String[] price = ((String) paramMap.get("price")).split("-");
             if (price != null && price.length == 2) {
-                if (!"0".equals(price[0])) {//如果区间起点不等于0
+                //如果区间起点不等于0 大于等于最小值
+                if (!"0".equals(price[0])) {
                     Criteria filterCriteria = new Criteria("item_price").greaterThanEqual(price[0]);
                     FilterQuery filterQuery = new SimpleFilterQuery(filterCriteria);
                     query.addFilterQuery(filterQuery);
                 }
-                if (!"*".equals(price[1])) {//如果区间终点不等于*
+                //如果区间终点不等于* 小于等于最大值
+                if (!"*".equals(price[1])) {
                     Criteria filterCriteria = new Criteria("item_price").lessThanEqual(price[1]);
                     FilterQuery filterQuery = new SimpleFilterQuery(filterCriteria);
                     query.addFilterQuery(filterQuery);
@@ -117,12 +123,14 @@ public class SearchServiceImpl implements SearchService {
             }
         }
         //按照价格排序
-        String sortValue = (String) paramMap.get("sort");//升序 降序
+        String sortValue = (String) paramMap.get("sort");//排序方式 升序 降序
         String sortField = (String) paramMap.get("sortField");//排序字段
         if (sortValue != null && !"".equals(sortValue)){
+            //降序
             if ("DESC".equals(sortValue)){
                 Sort sort = new Sort(Sort.Direction.DESC, "item_" + sortField);
                 query.addSort(sort);
+            //升序
             }else if ("ASC".equals(sortValue)){
                 Sort sort = new Sort(Sort.Direction.ASC, "item_" + sortField);
                 query.addSort(sort);
@@ -156,6 +164,7 @@ public class SearchServiceImpl implements SearchService {
                 if (highLightTitle != null && highLightTitle.size() > 0){
                     //获取高亮的标题
                     String title = highLightTitle.get(0);
+                    //替换高亮标题数据
                     item.setTitle(title);
                 }
             }
@@ -206,7 +215,7 @@ public class SearchServiceImpl implements SearchService {
         return resultList;
     }
 
-    //根据分类名称查询对应的品牌集合和规格集合
+    //根据分类名称从redis中查询对应的品牌集合和规格集合
     private Map findSpecListAndBrandList(String categoryName){
         //根据分类名称到redis中查询对应的模板id
         Long templateId = (Long) redisTemplate.boundHashOps(Constants.CATEGORY_LIST_REDIS).get(categoryName);

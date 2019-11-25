@@ -17,5 +17,4 @@ public class SearchController {
     public Map<String, Object> search(@RequestBody Map paramMap){
         return searchService.search(paramMap);
     }
-
 }

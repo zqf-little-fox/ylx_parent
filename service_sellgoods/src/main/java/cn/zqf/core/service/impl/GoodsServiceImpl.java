@@ -17,6 +17,7 @@ import cn.zqf.core.pojo.item.ItemCat;
 import cn.zqf.core.pojo.item.ItemQuery;
 import cn.zqf.core.pojo.seller.Seller;
 import cn.zqf.core.service.GoodsService;
+import cn.zqf.core.service.SolrManagerService;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.Page;
@@ -106,21 +107,25 @@ public class GoodsServiceImpl implements GoodsService {
     }
 
     @Override
-    public void delete(Long[] ids) {
-        for (Long id : ids) {
-            Goods goods = goodsDao.selectByPrimaryKey(id);
-            goods.setIsDelete("1");
-            goodsDao.updateByPrimaryKey(goods);
-        }
+    public void delete(Long id) {
+        Goods goods = goodsDao.selectByPrimaryKey(id);
+        goods.setIsDelete("1");
+        goodsDao.updateByPrimaryKey(goods);
     }
 
     @Override
-    public void updateStatus(Long[] ids, String status) {
-        for (Long id : ids) {
-            Goods goods = goodsDao.selectByPrimaryKey(id);
-            goods.setAuditStatus(status);
-            goodsDao.updateByPrimaryKey(goods);
-        }
+    public void updateStatus(Long id, String status) {
+        //1.根据商品的id 修改商品的状态码
+        Goods goods = goodsDao.selectByPrimaryKey(id);
+        goods.setAuditStatus(status);
+        goodsDao.updateByPrimaryKey(goods);
+        //2根据商品的id  修改库存对象的状态码
+        Item item = new Item();
+        item.setStatus(status);
+        ItemQuery query = new ItemQuery();
+        ItemQuery.Criteria criteria = query.createCriteria();
+        criteria.andGoodsIdEqualTo(id);
+        itemDao.updateByExampleSelective(item,query);
     }
 
     @Override
@@ -144,12 +149,10 @@ public class GoodsServiceImpl implements GoodsService {
     }
 
     @Override
-    public void updateIsMarketable(Long[] ids, String isMarketable) {
-        for (Long id : ids) {
-            Goods goods = goodsDao.selectByPrimaryKey(id);
-            goods.setIsMarketable(isMarketable);
-            goodsDao.updateByPrimaryKeySelective(goods);
-        }
+    public void updateIsMarketable(Long id, String isMarketable) {
+        Goods goods = goodsDao.selectByPrimaryKey(id);
+        goods.setIsMarketable(isMarketable);
+        goodsDao.updateByPrimaryKeySelective(goods);
     }
 
     public void insertItem(GoodsEntity goodsEntity,Object method){
@@ -203,6 +206,8 @@ public class GoodsServiceImpl implements GoodsService {
         }
         //更新时间
         item.setUpdateTime(new Date());
+        //库存状态
+        //item.setStatus("0");
         //分类的id 库存分类
         item.setCategoryid(goodsEntity.getGoods().getCategory3Id());
         //分类的名称

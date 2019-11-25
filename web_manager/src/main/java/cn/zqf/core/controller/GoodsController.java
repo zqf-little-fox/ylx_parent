@@ -5,6 +5,7 @@ import cn.zqf.core.entity.PageResult;
 import cn.zqf.core.entity.Result;
 import cn.zqf.core.pojo.good.Goods;
 import cn.zqf.core.service.GoodsService;
+import cn.zqf.core.service.SolrManagerService;
 import com.alibaba.dubbo.config.annotation.Reference;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class GoodsController {
     @Reference
     private GoodsService goodsService;
+    @Reference
+    private SolrManagerService solrManagerService;
 
     //查询商品列表
     @RequestMapping("/search")
@@ -32,7 +35,20 @@ public class GoodsController {
     @RequestMapping("/updateStatus")
     public Result updateStatus(Long[] ids, String status){
         try{
-            goodsService.updateStatus(ids,status);
+            if (ids != null){
+                for (Long id : ids) {
+                    //如果审核驳回，修改商品状态为未上架
+                    if ("2".equals(status)){
+                        goodsService.updateIsMarketable(id,null);
+                    }
+                    //根据商品的id改变商品的审核状态
+                    goodsService.updateStatus(id,status);
+                    /*if ("1".equals(status)){
+                        //根据商品的id到solr中删除对应的数据
+                        solrManagerService.saveItemToSolr(id);
+                    }*/
+                }
+            }
             return new Result(true,"成功");
         }catch (Exception e){
             e.printStackTrace();
@@ -44,7 +60,12 @@ public class GoodsController {
     @RequestMapping("/delete")
     public Result delete(Long[] ids){
         try{
-            goodsService.delete(ids);
+            if (ids != null){
+                for (Long id : ids) {
+                    goodsService.delete(id);
+                    solrManagerService.deleteItemFromSolr(id);
+                }
+            }
             return new Result(true,"删除成功");
         }catch (Exception e){
             e.printStackTrace();

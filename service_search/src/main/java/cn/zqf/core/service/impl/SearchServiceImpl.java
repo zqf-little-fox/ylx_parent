@@ -4,7 +4,6 @@ import cn.zqf.core.pojo.item.Item;
 import cn.zqf.core.service.SearchService;
 import cn.zqf.core.util.Constants;
 import com.alibaba.dubbo.config.annotation.Service;
-import com.alibaba.fastjson.JSON;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -13,7 +12,6 @@ import org.springframework.data.solr.core.SolrTemplate;
 import org.springframework.data.solr.core.query.*;
 import org.springframework.data.solr.core.query.result.*;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,6 +53,9 @@ public class SearchServiceImpl implements SearchService {
     private Map<String, Object> highLightSearch(Map paramMap){
         //获取关键字
         String keywords = String.valueOf(paramMap.get("keywords"));
+        if (keywords != null){
+            keywords = keywords.replaceAll(" ","");
+        }
         //当前页
         Integer pageNo = (Integer) paramMap.get("pageNo");
         //每页查询多少条
@@ -125,14 +126,18 @@ public class SearchServiceImpl implements SearchService {
         //按照价格排序
         String sortValue = (String) paramMap.get("sort");//排序方式 升序 降序
         String sortField = (String) paramMap.get("sortField");//排序字段
-        if (sortValue != null && !"".equals(sortValue)){
+        if (sortValue != null && !"".equals(sortValue) && sortValue != null && !"".equals(sortValue)){
             //降序
             if ("DESC".equals(sortValue)){
+                //创建排序对象         枚举：一组常量的值               价格域
                 Sort sort = new Sort(Sort.Direction.DESC, "item_" + sortField);
+                //将排序对象放入到查询对象中
                 query.addSort(sort);
             //升序
             }else if ("ASC".equals(sortValue)){
+                //创建排序对象         枚举：一组常量的值               价格域
                 Sort sort = new Sort(Sort.Direction.ASC, "item_" + sortField);
+                //将排序对象放入到查询对象中
                 query.addSort(sort);
             }
         }
@@ -184,6 +189,9 @@ public class SearchServiceImpl implements SearchService {
     private List<String> findGroupCategoryList(Map paramMap){
         //获取关键字
         String keywords = String.valueOf(paramMap.get("keywords"));
+        if (keywords != null){
+            keywords = keywords.replaceAll(" ","");
+        }
         //创建查询对象
         SimpleQuery query = new SimpleQuery();
         //创建查询条件对象

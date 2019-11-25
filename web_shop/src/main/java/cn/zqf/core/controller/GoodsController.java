@@ -6,6 +6,7 @@ import cn.zqf.core.entity.Result;
 
 import cn.zqf.core.pojo.good.Goods;
 import cn.zqf.core.service.GoodsService;
+import cn.zqf.core.service.SolrManagerService;
 import com.alibaba.dubbo.config.annotation.Reference;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class GoodsController {
     @Reference
     private GoodsService goodsService;
+    @Reference
+    private SolrManagerService solrManagerService;
 
     @RequestMapping("/add")
     public Result add(@RequestBody GoodsEntity goodsEntity){
@@ -69,7 +72,13 @@ public class GoodsController {
     @RequestMapping("/delete")
     public Result delete(Long[] ids){
         try{
-            goodsService.delete(ids);
+            if (ids != null){
+                for (Long id : ids) {
+                    goodsService.delete(id);
+                    //根据商品id 删除solr中的数据
+                    solrManagerService.deleteItemFromSolr(id);
+                }
+            }
             return new Result(true,"删除成功");
         }catch (Exception e){
             e.printStackTrace();
@@ -81,7 +90,26 @@ public class GoodsController {
     @RequestMapping("/updateIsMarketable")
     public Result updateIsMarketable(Long[] ids,String isMarketable){
         try{
-            goodsService.updateIsMarketable(ids,isMarketable);
+            if (ids != null) {
+                for (Long id : ids) {
+                    //根据商品id获取该商品数据
+                    GoodsEntity goodsEntity = goodsService.findOne(id);
+                    //商品审核通过才能进行上下架操作
+                    if ("1".equals(goodsEntity.getGoods().getAuditStatus())) {
+                        //商品上下架
+                        goodsService.updateIsMarketable(id, isMarketable);
+                        //商品上架 根据商品id将商品信息添加到solr中
+                        if ("1".equals(isMarketable)){
+                            solrManagerService.saveItemToSolr(id);
+                        //商品未上架或者已下架 根据商品id修改solr中对应的数据
+                        } else{
+                            solrManagerService.deleteItemFromSolr(id);
+                        }
+                    }else {
+                        return new Result(false,"该商品未审核通过");
+                    }
+                }
+            }
             return new Result(true,"成功");
         }catch (Exception e){
             e.printStackTrace();

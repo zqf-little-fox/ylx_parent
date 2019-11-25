@@ -11,11 +11,11 @@ public interface GoodsService {
 
     PageResult search(Goods goods, Integer pageNum, Integer pageSize);
 
-    void delete(Long[] ids);
+    void delete(Long id);
 
-    void updateStatus(Long[] ids, String status);
+    void updateStatus(Long id, String status);
 
     void update(GoodsEntity goodsEntity);
 
-    void updateIsMarketable(Long[] ids, String isMarketable);
+    void updateIsMarketable(Long id, String isMarketable);
 }

@@ -4,6 +4,7 @@ import cn.zqf.core.pojo.item.Item;
 import cn.zqf.core.service.SearchService;
 import cn.zqf.core.util.Constants;
 import com.alibaba.dubbo.config.annotation.Service;
+import com.alibaba.fastjson.JSON;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
@@ -88,24 +89,31 @@ public class SearchServiceImpl implements SearchService {
         //按照规格筛选
         if (paramMap.get("spec") != null && !"".equals(paramMap.get("spec"))){
             Map<String,String> specMap = (Map<String, String>) paramMap.get("spec");
-            for (String key : specMap.keySet()){
-                Criteria filterCriteria = new Criteria("item_spec_" + key).is(specMap.get(key));
-                SimpleFilterQuery filterQuery = new SimpleFilterQuery(filterCriteria);
-                query.addFilterQuery(filterQuery);
+            //Map<String,String> specMap = JSON.parseObject(String.valueOf(paramMap.get("spec")), Map.class);
+            if (specMap != null && specMap.size() > 0) {
+                for (String key : specMap.keySet()) {
+                    Criteria filterCriteria = new Criteria("item_spec_" + key).is(specMap.get(key));
+                    //SimpleFilterQuery filterQuery = new SimpleFilterQuery(filterCriteria);
+                    FilterQuery filterQuery = new SimpleFilterQuery();
+                    filterQuery.addCriteria(filterCriteria);
+                    query.addFilterQuery(filterQuery);
+                }
             }
         }
         //按照价格筛选
         if (paramMap.get("price") != null && !"".equals(paramMap.get("price"))){
             String[] price = ((String) paramMap.get("price")).split("-");
-            if(!price[0].equals("0")){//如果区间起点不等于0
-                Criteria filterCriteria=new Criteria("item_price").greaterThanEqual(price[0]);
-                FilterQuery filterQuery=new SimpleFilterQuery(filterCriteria);
-                query.addFilterQuery(filterQuery);
-            }
-            if(!price[1].equals("*")){//如果区间终点不等于*
-                Criteria filterCriteria=new Criteria("item_price").lessThanEqual(price[1]);
-                FilterQuery filterQuery=new SimpleFilterQuery(filterCriteria);
-                query.addFilterQuery(filterQuery);
+            if (price != null && price.length == 2) {
+                if (!"0".equals(price[0])) {//如果区间起点不等于0
+                    Criteria filterCriteria = new Criteria("item_price").greaterThanEqual(price[0]);
+                    FilterQuery filterQuery = new SimpleFilterQuery(filterCriteria);
+                    query.addFilterQuery(filterQuery);
+                }
+                if (!"*".equals(price[1])) {//如果区间终点不等于*
+                    Criteria filterCriteria = new Criteria("item_price").lessThanEqual(price[1]);
+                    FilterQuery filterQuery = new SimpleFilterQuery(filterCriteria);
+                    query.addFilterQuery(filterQuery);
+                }
             }
         }
         //按照价格排序

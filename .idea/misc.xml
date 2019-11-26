@@ -14,6 +14,7 @@
     <file type="web" url="file://$PROJECT_DIR$/web_portal" />
     <file type="web" url="file://$PROJECT_DIR$/web_shop" />
     <file type="web" url="file://$PROJECT_DIR$/web_user" />
+    <type id="Spring" />
   </component>
   <component name="MavenProjectsManager">
     <option name="originalFiles">

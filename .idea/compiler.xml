@@ -8,6 +8,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="common" />
         <module name="dao" />
+        <module name="freemarkerDemo" />
         <module name="interface" />
         <module name="pojo" />
         <module name="service_buyer" />

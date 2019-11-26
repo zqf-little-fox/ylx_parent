@@ -5,6 +5,7 @@ import cn.zqf.core.entity.PageResult;
 import cn.zqf.core.entity.Result;
 
 import cn.zqf.core.pojo.good.Goods;
+import cn.zqf.core.service.CmsService;
 import cn.zqf.core.service.GoodsService;
 import cn.zqf.core.service.SolrManagerService;
 import com.alibaba.dubbo.config.annotation.Reference;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/goods")
 public class GoodsController {
@@ -20,6 +23,8 @@ public class GoodsController {
     private GoodsService goodsService;
     @Reference
     private SolrManagerService solrManagerService;
+    @Reference
+    private CmsService cmsService;
 
     @RequestMapping("/add")
     public Result add(@RequestBody GoodsEntity goodsEntity){
@@ -61,9 +66,23 @@ public class GoodsController {
                 return new Result(false,"您没有权限修改");
             }
             goodsService.update(goodsEntity);
+
+            Long goodsId = goodsEntity.getGoods().getId();
+            //重新生成详情页面
+            Map<String, Object> goodsData = cmsService.findGoodsData(goodsId);
+            cmsService.createStaticPage(goodsId,goodsData);
+
+            //如果商品已上架，修改solr中的数据
+            if ("1".equals(goodsEntity.getGoods().getIsMarketable())) {
+                //根据商品ID删除solr中对应的数据
+                solrManagerService.deleteItemFromSolr(goodsId);
+                //根据商品ID添加修改后的商品到solr中
+                solrManagerService.saveItemToSolr(goodsId);
+            }
+
             return new Result(true,"修改成功");
         }catch (Exception e){
-            e.printStackTrace();;
+            e.printStackTrace();
             return new Result(false,"修改失败");
         }
     }
@@ -101,8 +120,8 @@ public class GoodsController {
                         //商品上架 根据商品id将商品信息添加到solr中
                         if ("1".equals(isMarketable)){
                             solrManagerService.saveItemToSolr(id);
-                        //商品未上架或者已下架 根据商品id修改solr中对应的数据
                         } else{
+                            //商品未上架或者已下架 根据商品id修改solr中对应的数据
                             solrManagerService.deleteItemFromSolr(id);
                         }
                     }else {

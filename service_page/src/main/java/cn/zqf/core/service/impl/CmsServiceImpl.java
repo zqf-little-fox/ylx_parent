@@ -77,7 +77,7 @@ public class CmsServiceImpl implements CmsService, ServletContextAware {
         String path = goodsId+".html";
         //获取绝对路径
         String realPath = getRealPath(path);
-        System.out.println("realPath：" + realPath);
+        //System.out.println("realPath：" + realPath);
         Writer out = new OutputStreamWriter(new FileOutputStream(new File(realPath)), "utf-8");
         //生成
         template.process(rootMap,out);

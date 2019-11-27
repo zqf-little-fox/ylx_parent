@@ -26,6 +26,7 @@
         <module>../fastDFSDemo</module>
         <module>../springDataRedisDemo</module>
         <module>../freemarkerDemo</module>
+        <module>../activeDemo</module>
     </modules>
     <!-- 集中定义依赖版本号 -->
     <properties>

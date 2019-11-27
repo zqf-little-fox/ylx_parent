@@ -19,10 +19,10 @@ import java.util.Map;
 public class GoodsController {
     @Reference
     private GoodsService goodsService;
-    @Reference
-    private SolrManagerService solrManagerService;
-    @Reference
-    private CmsService cmsService;
+//    @Reference
+//    private SolrManagerService solrManagerService;
+//    @Reference
+//    private CmsService cmsService;
 
     //查询商品列表
     @RequestMapping("/search")
@@ -48,13 +48,13 @@ public class GoodsController {
                     }
                     //根据商品的id改变商品的审核状态
                     goodsService.updateStatus(id,status);
-                    if ("1".equals(status)){
+                    /*if ("1".equals(status)){
                         //根据商品id获取库存数据 放入solr索引库中供搜索使用
                         solrManagerService.saveItemToSolr(id);
                         //根据商品的id获取商品的详情数据 并根据详情的数据和模板生成详情的页面
                         Map<String, Object> goodsData = cmsService.findGoodsData(id);
                         cmsService.createStaticPage(id,goodsData);
-                    }
+                    }*/
                 }
             }
             return new Result(true,"成功");
@@ -64,6 +64,8 @@ public class GoodsController {
         }
     }
 
+    /*
+    //测试生成详情页面
     @RequestMapping("/testPage")
     public boolean testCreatePage(Long goodsId){
         try {
@@ -74,7 +76,7 @@ public class GoodsController {
             e.printStackTrace();
             return false;
         }
-    }
+    }*/
 
     //删除
     @RequestMapping("/delete")
@@ -83,7 +85,7 @@ public class GoodsController {
             if (ids != null){
                 for (Long id : ids) {
                     goodsService.delete(id);
-                    solrManagerService.deleteItemFromSolr(id);
+                    //solrManagerService.deleteItemFromSolr(id);
                 }
             }
             return new Result(true,"删除成功");

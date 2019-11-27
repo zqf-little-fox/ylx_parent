@@ -21,10 +21,10 @@ import java.util.Map;
 public class GoodsController {
     @Reference
     private GoodsService goodsService;
-    @Reference
-    private SolrManagerService solrManagerService;
-    @Reference
-    private CmsService cmsService;
+//    @Reference
+//    private SolrManagerService solrManagerService;
+//    @Reference
+//    private CmsService cmsService;
 
     @RequestMapping("/add")
     public Result add(@RequestBody GoodsEntity goodsEntity){
@@ -69,16 +69,16 @@ public class GoodsController {
 
             Long goodsId = goodsEntity.getGoods().getId();
             //重新生成详情页面
-            Map<String, Object> goodsData = cmsService.findGoodsData(goodsId);
-            cmsService.createStaticPage(goodsId,goodsData);
+            /*Map<String, Object> goodsData = cmsService.findGoodsData(goodsId);
+            cmsService.createStaticPage(goodsId,goodsData);*/
 
             //如果商品已上架，修改solr中的数据
-            if ("1".equals(goodsEntity.getGoods().getIsMarketable())) {
+            /*if ("1".equals(goodsEntity.getGoods().getIsMarketable())) {
                 //根据商品ID删除solr中对应的数据
                 solrManagerService.deleteItemFromSolr(goodsId);
                 //根据商品ID添加修改后的商品到solr中
                 solrManagerService.saveItemToSolr(goodsId);
-            }
+            }*/
 
             return new Result(true,"修改成功");
         }catch (Exception e){
@@ -95,7 +95,7 @@ public class GoodsController {
                 for (Long id : ids) {
                     goodsService.delete(id);
                     //根据商品id 删除solr中的数据
-                    solrManagerService.deleteItemFromSolr(id);
+                    //solrManagerService.deleteItemFromSolr(id);
                 }
             }
             return new Result(true,"删除成功");
@@ -118,12 +118,12 @@ public class GoodsController {
                         //商品上下架
                         goodsService.updateIsMarketable(id, isMarketable);
                         //商品上架 根据商品id将商品信息添加到solr中
-                        if ("1".equals(isMarketable)){
+                        /*if ("1".equals(isMarketable)){
                             solrManagerService.saveItemToSolr(id);
                         } else{
                             //商品未上架或者已下架 根据商品id修改solr中对应的数据
                             solrManagerService.deleteItemFromSolr(id);
-                        }
+                        }*/
                     }else {
                         return new Result(false,"该商品未审核通过");
                     }

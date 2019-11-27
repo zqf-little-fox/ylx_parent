@@ -22,9 +22,17 @@ import com.alibaba.dubbo.config.annotation.Service;
 import com.alibaba.fastjson.JSON;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.core.MessageCreator;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Date;
@@ -49,6 +57,14 @@ public class GoodsServiceImpl implements GoodsService {
     private BrandDao brandDao;
     @Autowired
     private SellerDao sellerDao;
+    @Autowired
+    private JmsTemplate jmsTemplate;
+    //商品上架使用
+    @Autowired
+    private ActiveMQTopic topicPageAndSolrDestination;
+    //商品下架使用
+    @Autowired
+    private ActiveMQQueue queueSolrDeleteDestination;
 
     @Override
     public GoodsEntity findOne(Long id) {
@@ -111,6 +127,14 @@ public class GoodsServiceImpl implements GoodsService {
         Goods goods = goodsDao.selectByPrimaryKey(id);
         goods.setIsDelete("1");
         goodsDao.updateByPrimaryKey(goods);
+        //将商品的id作为消息发送给消息服务器
+        jmsTemplate.send(queueSolrDeleteDestination, new MessageCreator() {
+            @Override
+            public Message createMessage(Session session) throws JMSException {
+                TextMessage textMessage = session.createTextMessage(String.valueOf(id));
+                return textMessage;
+            }
+        });
     }
 
     @Override
@@ -126,6 +150,16 @@ public class GoodsServiceImpl implements GoodsService {
         ItemQuery.Criteria criteria = query.createCriteria();
         criteria.andGoodsIdEqualTo(id);
         itemDao.updateByExampleSelective(item,query);
+        //将商品的id作为消息发送给消息服务器
+        /*if ("1".equals(status)){
+            jmsTemplate.send(topicPageAndSolrDestination, new MessageCreator() {
+                @Override
+                public Message createMessage(Session session) throws JMSException {
+                    TextMessage textMessage = session.createTextMessage(String.valueOf(id));
+                    return textMessage;
+                }
+            });
+        }*/
     }
 
     @Override
@@ -146,6 +180,26 @@ public class GoodsServiceImpl implements GoodsService {
         itemDao.deleteByExample(query);
         //添加新的库存对象
         insertItem(goodsEntity,createName);
+
+        //商品上架 修改solr中对应的商品数据和详情页面
+        if ("1".equals(goodsEntity.getGoods().getIsMarketable())){
+            //将商品的id作为消息发送给消息服务器 删除原来solr中对应的数据
+            jmsTemplate.send(queueSolrDeleteDestination, new MessageCreator() {
+                @Override
+                public Message createMessage(Session session) throws JMSException {
+                    TextMessage textMessage = session.createTextMessage(String.valueOf(goodsEntity.getGoods().getId()));
+                    return textMessage;
+                }
+            });
+            //将商品的id作为消息发送给消息服务器 新的数据添加到solr中和生成新的详情页面
+            jmsTemplate.send(topicPageAndSolrDestination, new MessageCreator() {
+                @Override
+                public Message createMessage(Session session) throws JMSException {
+                    TextMessage textMessage = session.createTextMessage(String.valueOf(goodsEntity.getGoods().getId()));
+                    return textMessage;
+                }
+            });
+        }
     }
 
     @Override
@@ -153,6 +207,26 @@ public class GoodsServiceImpl implements GoodsService {
         Goods goods = goodsDao.selectByPrimaryKey(id);
         goods.setIsMarketable(isMarketable);
         goodsDao.updateByPrimaryKeySelective(goods);
+        if ("1".equals(isMarketable)){
+            //将商品的id作为消息发送给消息服务器 商品上架
+            jmsTemplate.send(topicPageAndSolrDestination, new MessageCreator() {
+                @Override
+                public Message createMessage(Session session) throws JMSException {
+                    TextMessage textMessage = session.createTextMessage(String.valueOf(id));
+                    return textMessage;
+                }
+            });
+        }else{
+            //将商品的id作为消息发送给消息服务器 商品下架
+            jmsTemplate.send(queueSolrDeleteDestination, new MessageCreator() {
+                @Override
+                public Message createMessage(Session session) throws JMSException {
+                    TextMessage textMessage = session.createTextMessage(String.valueOf(id));
+                    return textMessage;
+                }
+            });
+        }
+
     }
 
     public void insertItem(GoodsEntity goodsEntity,Object method){

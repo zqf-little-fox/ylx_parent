@@ -216,7 +216,7 @@ public class GoodsServiceImpl implements GoodsService {
                     return textMessage;
                 }
             });
-        }else{
+        }else {
             //将商品的id作为消息发送给消息服务器 商品下架
             jmsTemplate.send(queueSolrDeleteDestination, new MessageCreator() {
                 @Override

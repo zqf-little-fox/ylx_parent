@@ -21,6 +21,8 @@
       <list>
         <option value="$PROJECT_DIR$/pom.xml" />
         <option value="$PROJECT_DIR$/../springsecurity/pom.xml" />
+        <option value="$PROJECT_DIR$/../springBootDemo/pom.xml" />
+        <option value="$PROJECT_DIR$/../smsDemo/pom.xml" />
       </list>
     </option>
   </component>

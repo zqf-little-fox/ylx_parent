@@ -3,21 +3,22 @@
 	xmlns:beans="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 						http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
-	
+	<!--放行的静态资源-->
 	<http pattern="/css/**" security="none"></http>
 	<http pattern="/img/**" security="none"></http>
 	<http pattern="/js/**" security="none"></http>
 	<http pattern="/plugins/**" security="none"></http>
-	
+	<!--放行的请求-->
 	<http pattern="/register.html" security="none"></http>
 	<http pattern="/user/add.do" security="none"></http>
 	<http pattern="/user/sendCode.do" security="none"></http>
 	
 	<!--   entry-point-ref  入口点引用 -->
 	<http use-expressions="false" entry-point-ref="casProcessingFilterEntryPoint">  
-        <intercept-url pattern="/**" access="ROLE_USER"/>   
+        <!--配置拦截器 拦截所有请求 应该具有ROLE_USER权限才可以访问我们的系统-->
+        <intercept-url pattern="/**" access="ROLE_USER"/>
         <csrf disabled="true"/>  
-        <!-- custom-filter为过滤器， position 表示将过滤器放在指定的位置上，before表示放在指定位置之前  ，after表示放在指定的位置之后  -->           
+        <!--custom-filter为过滤器，position 表示将过滤器放在指定的位置上，before表示放在指定位置之前，after表示放在指定的位置之后-->
         <custom-filter ref="casAuthenticationFilter"  position="CAS_FILTER" />      
         <custom-filter ref="requestSingleLogoutFilter" before="LOGOUT_FILTER"/>  
         <custom-filter ref="singleLogoutFilter" before="CAS_FILTER"/>  
@@ -35,7 +36,6 @@
     </beans:bean>  
     <!-- CAS入口点 结束 -->
 
-    
     <!-- 认证过滤器 开始 -->
     <beans:bean id="casAuthenticationFilter" class="org.springframework.security.cas.web.CasAuthenticationFilter">  
         <beans:property name="authenticationManager" ref="authenticationManager"/>  
@@ -61,11 +61,9 @@
         </beans:property>  
         <beans:property name="key" value="an_id_for_this_auth_provider_only"/> 
     </beans:bean>        
-   		 <!-- 认证类 -->
-	<beans:bean id="userDetailsService" class="com.pinyougou.user.service.UserDetailServiceImpl"/>  
-	
+    <!-- 认证类 -->
+	<beans:bean id="userDetailsService" class="cn.zqf.core.service.UserDetailServiceImpl"/>
 	<!-- 认证过滤器 结束 -->
-	
 	
 	<!-- 单点登出  开始  -->     
     <beans:bean id="singleLogoutFilter" class="org.jasig.cas.client.session.SingleSignOutFilter"/>    

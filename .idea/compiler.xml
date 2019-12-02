@@ -7,6 +7,8 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="activeDemo" />
+        <module name="casDemo1" />
+        <module name="casDemo2" />
         <module name="common" />
         <module name="dao" />
         <module name="freemarkerDemo" />
@@ -30,6 +32,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="casDemo" target="1.8" />
       <module name="service_sellergoods" target="1.8" />
     </bytecodeTargetLevel>
   </component>

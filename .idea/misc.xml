@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ExternalStorageConfigurationManager" enabled="true" />
   <component name="FrameworkDetectionExcludesConfiguration">
+    <file type="web" url="file://$PROJECT_DIR$/../casDemo1" />
+    <file type="web" url="file://$PROJECT_DIR$/../casDemo2" />
     <file type="web" url="file://$PROJECT_DIR$/../springsecurity" />
     <file type="web" url="file://$PROJECT_DIR$/service_buyer" />
     <file type="web" url="file://$PROJECT_DIR$/service_page" />
@@ -23,6 +25,8 @@
         <option value="$PROJECT_DIR$/../springsecurity/pom.xml" />
         <option value="$PROJECT_DIR$/../springBootDemo/pom.xml" />
         <option value="$PROJECT_DIR$/../smsDemo/pom.xml" />
+        <option value="$PROJECT_DIR$/../casDemo1/pom.xml" />
+        <option value="$PROJECT_DIR$/../casDemo2/pom.xml" />
       </list>
     </option>
   </component>

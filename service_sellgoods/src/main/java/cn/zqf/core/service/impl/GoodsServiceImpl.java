@@ -293,6 +293,8 @@ public class GoodsServiceImpl implements GoodsService {
         //卖家的名称
         Seller seller = sellerDao.selectByPrimaryKey(goodsEntity.getGoods().getSellerId());
         item.setSeller(seller.getName());
+        //卖家的id
+        item.setSellerId(goodsEntity.getGoods().getSellerId());
         //式例的图片
         String itemImages = goodsEntity.getGoodsDesc().getItemImages();
         List<Map> maps = JSON.parseArray(itemImages, Map.class);

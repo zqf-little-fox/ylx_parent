@@ -70,7 +70,7 @@ app.controller("itemController",function($scope,$http){
 				+$scope.sku.id+'&num='+$scope.num ,{'withCredentials':true} ).success(
 			function(response){
 				if(response.success){
-					location.href='http://localhost:8080/success-cart.html';
+					location.href='http://localhost:8080/cart.html';
 				}else{
 					alert(response.message);
 				}
